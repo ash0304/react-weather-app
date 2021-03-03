@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 // 載入 emotion 的 styled 套件
 import styled from '@emotion/styled';
 // 載入圖示
@@ -107,6 +107,7 @@ const Redo = styled.div`
 `;
 
 const WeatherApp = () => {
+    console.log('invoke function component')
     // 定義會使用到的資料狀態
     const [currentWeather, setCurrentWeather] = useState({
         observationTime: '2019-10-02 22:10:00',
@@ -116,12 +117,16 @@ const WeatherApp = () => {
         windSpeed: 0.3,
         humid: 0.88
     })
-    // 定義handleClick 方法，呼叫中央氣象局API
-    const handleClick = () => {
+    // 第二個參數傳入空陣列，只要每次重新渲染後dependencies內的元素沒有改變，任何useEffect內的函式就不會被執行
+    useEffect(() => {
+        console.log('execute function in Effect')
+        fetchCurrentWeather()
+    }, []);
+    // 定義 fetchCurrentWeather 方法，呼叫中央氣象局API
+    const fetchCurrentWeather = () => {
         fetch('https://opendata.cwb.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=CWB-B699F3CC-3A72-43B8-86D3-99C66F0582DC&locationName=臺北')
             .then((response) => response.json())
             .then((data) => {
-                console.log(data)
                 const locationData = data.records.location[0];
                 // 將風速(WDSD)、氣溫(TEMP)、濕度(HUMD)的資料取出
                 const weatherElements = locationData.weatherElement.reduce((neededElements, item) => {
@@ -143,6 +148,7 @@ const WeatherApp = () => {
     };
     return (
         <Container>
+            {console.log('render')}
             <WeatherCard>
                 <Location>{currentWeather.locationName}</Location>
                 <Description>
@@ -165,7 +171,7 @@ const WeatherApp = () => {
                     {Math.round(currentWeather.humid * 100)} %
                 </Rain>
                 {/* 將最後觀測時間移到畫面右下角呈現 */}
-                <Redo onClick={handleClick}>
+                <Redo onClick={fetchCurrentWeather}>
                     最後觀測時間:
                     {/* 優化時間呈現 */}
                     {new Intl.DateTimeFormat('zh-TW', {
