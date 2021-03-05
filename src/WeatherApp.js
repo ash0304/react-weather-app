@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 // 載入 emotion 的 styled 套件
 import styled from '@emotion/styled';
 // 載入圖示
@@ -106,6 +106,52 @@ const Redo = styled.div`
     }
 `;
 
+// 定義 fetchCurrentWeather 方法，呼叫中央氣象局API
+const fetchCurrentWeather = () => {
+    // STEP 3-1: 加上return 直接把fect API 回傳的Promise回傳出去
+    return fetch('https://opendata.cwb.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=CWB-B699F3CC-3A72-43B8-86D3-99C66F0582DC&locationName=臺北')
+        .then((response) => response.json())
+        .then((data) => {
+            const locationData = data.records.location[0];
+            // 將風速(WDSD)、氣溫(TEMP)、濕度(HUMD)的資料取出
+            const weatherElements = locationData.weatherElement.reduce((neededElements, item) => {
+                if (['WDSD', 'TEMP', 'HUMD'].includes(item.elementName)) {
+                    neededElements[item.elementName] = item.elementValue;
+                }
+                return neededElements
+            }, {})
+            // 3-2: 把取得的資料內容回傳出去，而不是在這裡 setWeatherElement
+            return {
+                observationTime: locationData.time.obsTime,
+                locationName: locationData.locationName,
+                temperature: weatherElements.TEMP,
+                windSpeed: weatherElements.WDSD,
+                humid: weatherElements.HUMD,
+            }
+        })
+};
+const fetchWeatherForecast = () => {
+    // STEP 4-1: 加上return 直接把fect API 回傳的Promise回傳出去
+    return fetch('https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization=CWB-B699F3CC-3A72-43B8-86D3-99C66F0582DC&locationName=臺北市')
+        .then((response) => response.json())
+        .then((data) => {
+            const locationData = data.records.location[0];
+            const weatherElements = locationData.weatherElement.reduce((neededElements, item) => {
+                if (['Wx', 'PoP', 'CI'].includes(item.elementName)) {
+                    neededElements[item.elementName] = item.time[0].parameter;
+                }
+                return neededElements;
+            }, {})
+            // 4-2: 把取得的資料內容回傳出去，而不是在這裡 setWeatherElement
+            return {
+                description: weatherElements.Wx.parameterName,
+                weatherCode: weatherElements.Wx.parameterValue,
+                rainPossibility: weatherElements.PoP.parameterName,
+                comfortability: weatherElements.CI.parameterName
+            }
+        })
+};
+
 const WeatherApp = () => {
     console.log('invoke function component')
     // 定義會使用到的資料狀態
@@ -120,60 +166,24 @@ const WeatherApp = () => {
         rainPossibility: 0,
         comfortability: '',
     })
+    const fetchData = useCallback(() => {
+        const fetchingData = async () => {
+            const [currentWeather, weatherForecast] = await Promise.all([
+                fetchCurrentWeather(),
+                fetchWeatherForecast()
+            ]);
+
+            setWeatherElement({
+                ...currentWeather,
+                ...weatherForecast
+            })
+        }
+        fetchingData();
+    }, [])
     // 第二個參數傳入空陣列，只要每次重新渲染後dependencies內的元素沒有改變，任何useEffect內的函式就不會被執行
     useEffect(() => {
-        console.log('execute function in Effect')
-        fetchCurrentWeather()
-        fetchWeatherForecast()
-    }, []);
-    // 定義 fetchCurrentWeather 方法，呼叫中央氣象局API
-    const fetchCurrentWeather = () => {
-        fetch('https://opendata.cwb.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=CWB-B699F3CC-3A72-43B8-86D3-99C66F0582DC&locationName=臺北')
-            .then((response) => response.json())
-            .then((data) => {
-                const locationData = data.records.location[0];
-                // 將風速(WDSD)、氣溫(TEMP)、濕度(HUMD)的資料取出
-                const weatherElements = locationData.weatherElement.reduce((neededElements, item) => {
-                    if (['WDSD', 'TEMP', 'HUMD'].includes(item.elementName)) {
-                        neededElements[item.elementName] = item.elementValue;
-                    }
-                    return neededElements
-                }, {})
-                // 當箭頭函式單純只回傳物件時，可以連return都不寫，但回傳物件需要使用小括號()包起來
-                setWeatherElement(prevState => ({
-                    ...prevState,
-                    observationTime: locationData.time.obsTime,
-                    locationName: locationData.locationName,
-                    temperature: weatherElements.TEMP,
-                    windSpeed: weatherElements.WDSD,
-                    humid: weatherElements.HUMD,
-                }))
-            })
-    };
-    const fetchWeatherForecast = () => {
-        fetch('https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization=CWB-B699F3CC-3A72-43B8-86D3-99C66F0582DC&locationName=臺北市')
-            .then((response) => response.json())
-            .then((data) => {
-                console.log('forecast', data)
-                const locationData = data.records.location[0];
-                const weatherElements = locationData.weatherElement.reduce((neededElements, item) => {
-                    if (['Wx', 'PoP', 'CI'].includes(item.elementName)) {
-                        neededElements[item.elementName] = item.time[0].parameter;
-                    }
-                    return neededElements;
-                }, {})
-                // 有可能資料回傳先後不同，可加入參數preState確保兩次fetch資料不會遺漏
-                setWeatherElement(prevState => (
-                    {
-                        ...prevState,
-                        description: weatherElements.Wx.parameterName,
-                        weatherCode: weatherElements.Wx.parameterValue,
-                        rainPossibility: weatherElements.PoP.parameterName,
-                        comfortability: weatherElements.CI.parameterName
-                    }
-                ));
-            })
-    };
+        fetchData();
+    }, [fetchData]);
     return (
         <Container>
             {console.log('render')}
@@ -197,10 +207,7 @@ const WeatherApp = () => {
                     {Math.round(weatherElement.rainPossibility)} %
                 </Rain>
                 {/* 將最後觀測時間移到畫面右下角呈現 */}
-                <Redo onClick={() => {
-                    fetchCurrentWeather();
-                    fetchWeatherForecast();
-                }}>
+                <Redo onClick={fetchData}>
                     最後觀測時間:
                     {/* 優化時間呈現 */}
                     {new Intl.DateTimeFormat('zh-TW', {
