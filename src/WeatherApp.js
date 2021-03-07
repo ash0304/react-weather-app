@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 // 載入 emotion 的 styled 套件
 import styled from '@emotion/styled';
 // 載入圖示
-import { ReactComponent as CloudyIcon } from './images/day-cloudy.svg';
+import WeatherIcon from './WeatherIcon';
 import { ReactComponent as AirFlowIcon } from './images/airFlow.svg';
 import { ReactComponent as RainIcon } from './images/rain.svg';
 import { ReactComponent as RedoIcon } from './images/refresh.svg';
@@ -84,10 +84,6 @@ const Rain = styled.div`
         margin-right: 30px;
     }
 `;
-// 透過styled(組件) 把樣式帶入已存在的組件中
-const Cloudy = styled(CloudyIcon)`
-    flex-basis: 30%;
-`;
 
 const Redo = styled.div`
     position: absolute;
@@ -166,6 +162,7 @@ const WeatherApp = () => {
         rainPossibility: 0,
         comfortability: '',
     })
+    // 使用useCallback，避免即使內容沒變，程式在useEffect內仍判定有改變而引發無窮迴圈
     const fetchData = useCallback(() => {
         const fetchingData = async () => {
             const [currentWeather, weatherForecast] = await Promise.all([
@@ -196,7 +193,7 @@ const WeatherApp = () => {
                     <Temperature>
                         {Math.round(weatherElement.temperature)}<Celsius>°C</Celsius>
                     </Temperature>
-                    <Cloudy />
+                    <WeatherIcon currentWeatherCode={weatherElement.weatherCode} moment="night" />
                 </CurrentWeather>
                 <AirFlow>
                     <AirFlowIcon />
