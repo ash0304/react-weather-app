@@ -1,6 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 // 載入 emotion 的 styled 套件
 import styled from '@emotion/styled';
+// STEP 1 : 匯出日出日落資料 & 引用 dayjs
+import dayjs from 'dayjs';
+import sunriseAndSunsetData from './sunrise-sunset.json';
 // 載入圖示
 import WeatherIcon from './WeatherIcon';
 import { ReactComponent as AirFlowIcon } from './images/airFlow.svg';
@@ -148,6 +151,35 @@ const fetchWeatherForecast = () => {
         })
 };
 
+const getMoment = locationName => {
+    // STEP 2 : 從日出日落時間中找出符合的地區
+    const location = sunriseAndSunsetData.find(
+        data => data.locationName.substr(0, 2) === locationName
+    )
+    // STEP 3: 找不到的話回傳null
+    if (!location) return null;
+    // STEP 4 : 取得當前時間
+    const now = new dayjs();
+    // STEP 5 : 將當前時間以 "2021-03-09" 的時間格式呈現
+    const nowDate = Intl.DateTimeFormat('zh-TW', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).format(now).replace(/\//g, '-');
+    // STEP 6 : 從該地區中找到對應日期
+    const locationDate = location.time && location.time.find((time) => time.dataTime === nowDate); 
+    // STEP 7 : 將日出日落以及當前時間轉換成時間戳(TimeStamp)
+    const sunriseTimestamp = dayjs(
+        `${locationDate.dataTime} ${locationDate.sunrise}`
+    ).unix();
+    const sunsetTimestamp = dayjs(
+        `${locationDate.dataTime} ${locationDate.sunset}`
+    ).unix();
+    // STEP 8 : 若當前時間界於日出和日落中間，則表示為白天，否則為晚上
+    const nowTimeStamp = now.unix();
+    return sunriseTimestamp <= nowTimeStamp && nowTimeStamp <= sunsetTimestamp ? 'day' : 'night';
+};
+
 const WeatherApp = () => {
     console.log('invoke function component')
     // 定義會使用到的資料狀態
@@ -177,6 +209,8 @@ const WeatherApp = () => {
         }
         fetchingData();
     }, [])
+    // 透過 useMemo 避免每次都重新計算取值，記得帶入dependencies
+    const moment = useMemo(() => getMoment(weatherElement.locationName), [weatherElement.locationName]);
     // 第二個參數傳入空陣列，只要每次重新渲染後dependencies內的元素沒有改變，任何useEffect內的函式就不會被執行
     useEffect(() => {
         fetchData();
@@ -193,7 +227,8 @@ const WeatherApp = () => {
                     <Temperature>
                         {Math.round(weatherElement.temperature)}<Celsius>°C</Celsius>
                     </Temperature>
-                    <WeatherIcon currentWeatherCode={weatherElement.weatherCode} moment="night" />
+                    {/* 將 momnet 帶入 props 中 */}
+                    <WeatherIcon currentWeatherCode={weatherElement.weatherCode} moment={moment || 'day'} />
                 </CurrentWeather>
                 <AirFlow>
                     <AirFlowIcon />
