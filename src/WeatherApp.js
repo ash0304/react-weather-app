@@ -8,7 +8,8 @@ import sunriseAndSunsetData from './sunrise-sunset.json';
 import WeatherIcon from './WeatherIcon';
 import { ReactComponent as AirFlowIcon } from './images/airFlow.svg';
 import { ReactComponent as RainIcon } from './images/rain.svg';
-import { ReactComponent as RedoIcon } from './images/refresh.svg';
+import { ReactComponent as RefreshIcon } from './images/refresh.svg';
+import { ReactComponent as LoadingIcon } from './images/loading.svg';
 
 // 定義帶有 styled 的 component
 const Container = styled.div`
@@ -88,7 +89,7 @@ const Rain = styled.div`
     }
 `;
 
-const Redo = styled.div`
+const Refresh = styled.div`
     position: absolute;
     right: 15px;
     bottom: 15px;
@@ -102,6 +103,17 @@ const Redo = styled.div`
         width: 15px;
         height: 15px;
         cursor: pointer;
+        animation: rotate infinite 1.5s linear;
+        animation-duration: ${({ isLoading }) => (isLoading ? '1.5s' : '0s')};
+    }
+
+    @keyframes rotate {
+        from {
+            transform: rotate(360deg);
+        }
+        to {
+            transform: rotate(0deg);
+        }
     }
 `;
 
@@ -167,7 +179,7 @@ const getMoment = locationName => {
         day: '2-digit'
     }).format(now).replace(/\//g, '-');
     // STEP 6 : 從該地區中找到對應日期
-    const locationDate = location.time && location.time.find((time) => time.dataTime === nowDate); 
+    const locationDate = location.time && location.time.find((time) => time.dataTime === nowDate);
     // STEP 7 : 將日出日落以及當前時間轉換成時間戳(TimeStamp)
     const sunriseTimestamp = dayjs(
         `${locationDate.dataTime} ${locationDate.sunrise}`
@@ -193,7 +205,22 @@ const WeatherApp = () => {
         weatherCode: 0,
         rainPossibility: 0,
         comfortability: '',
+        isLoading: true
     })
+
+    // 解構賦值
+    const {
+        observationTime,
+        locationName,
+        temperature,
+        windSpeed,
+        description,
+        weatherCode,
+        rainPossibility,
+        comfortability,
+        isLoading
+    } = weatherElement;
+
     // 使用useCallback，避免即使內容沒變，程式在useEffect內仍判定有改變而引發無窮迴圈
     const fetchData = useCallback(() => {
         const fetchingData = async () => {
@@ -204,50 +231,60 @@ const WeatherApp = () => {
 
             setWeatherElement({
                 ...currentWeather,
-                ...weatherForecast
+                ...weatherForecast,
+                isLoading: false,
             })
-        }
+        };
+
+        setWeatherElement(prevState => {
+            return {
+                ...prevState,
+                isLoading: true,
+            };
+        });
+
         fetchingData();
     }, [])
     // 透過 useMemo 避免每次都重新計算取值，記得帶入dependencies
-    const moment = useMemo(() => getMoment(weatherElement.locationName), [weatherElement.locationName]);
+    const moment = useMemo(() => getMoment(locationName), [locationName]);
     // 第二個參數傳入空陣列，只要每次重新渲染後dependencies內的元素沒有改變，任何useEffect內的函式就不會被執行
     useEffect(() => {
         fetchData();
     }, [fetchData]);
     return (
         <Container>
-            {console.log('render')}
             <WeatherCard>
-                <Location>{weatherElement.locationName}</Location>
+                <Location>{locationName}</Location>
                 <Description>
-                    {weatherElement.description} {weatherElement.comfortability}
+                    {description} {comfortability}
                 </Description>
                 <CurrentWeather>
                     <Temperature>
-                        {Math.round(weatherElement.temperature)}<Celsius>°C</Celsius>
+                        {Math.round(temperature)}<Celsius>°C</Celsius>
                     </Temperature>
                     {/* 將 momnet 帶入 props 中 */}
-                    <WeatherIcon currentWeatherCode={weatherElement.weatherCode} moment={moment || 'day'} />
+                    <WeatherIcon currentWeatherCode={weatherCode} moment={moment || 'day'} />
                 </CurrentWeather>
                 <AirFlow>
                     <AirFlowIcon />
-                    {weatherElement.windSpeed} m/h
+                    {windSpeed} m/h
                 </AirFlow>
                 <Rain>
                     <RainIcon />
-                    {Math.round(weatherElement.rainPossibility)} %
+                    {Math.round(rainPossibility)} %
                 </Rain>
                 {/* 將最後觀測時間移到畫面右下角呈現 */}
-                <Redo onClick={fetchData}>
+                <Refresh onClick={fetchData} isLoading={isLoading}>
                     最後觀測時間:
                     {/* 優化時間呈現 */}
                     {new Intl.DateTimeFormat('zh-TW', {
                         hour: 'numeric',
                         minute: 'numeric'
-                    }).format(new Date(weatherElement.observationTime))}{' '}
-                    <RedoIcon />
-                </Redo>
+                    }).format(new Date(observationTime))}{' '}
+
+                    {/* 當 isLoading 為true的時候顯示 LoadingIcon 否則顯示 RedoIcon */}
+                    {isLoading ? <LoadingIcon /> : <RefreshIcon />}
+                </Refresh>
             </WeatherCard>
         </Container>
     );
