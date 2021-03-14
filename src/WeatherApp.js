@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 // 載入 emotion 的 styled 套件
 import styled from '@emotion/styled';
-// STEP 1 : 匯出日出日落資料 & 引用 dayjs
+// 從 emotion-theming 中載入 ThemeProvider
+import { ThemeProvider } from '@emotion/react';
+// 匯出日出日落資料 & 引用 dayjs
 import dayjs from 'dayjs';
 import sunriseAndSunsetData from './sunrise-sunset.json';
 // 載入圖示
@@ -11,115 +13,136 @@ import { ReactComponent as RainIcon } from './images/rain.svg';
 import { ReactComponent as RefreshIcon } from './images/refresh.svg';
 import { ReactComponent as LoadingIcon } from './images/loading.svg';
 
+// 定義主題配色
+const theme = {
+    light: {
+        backgroundColor: '#ededed',
+        foregroundColor: '#f9f9f9',
+        boxShadow: '0 1px 3px 0 #999999',
+        titleColor: '#212121',
+        temperatureColor: '#757575',
+        textColor: '#828282',
+    },
+    dark: {
+        backgroundColor: '#1F2022',
+        foregroundColor: '#121416',
+        boxShadow:
+            '0 1px 4px 0 rgba(12, 12, 13, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.15)',
+        titleColor: '#f9f9fa',
+        temperatureColor: '#dddddd',
+        textColor: '#cccccc',
+    },
+}
+
 // 定義帶有 styled 的 component
 const Container = styled.div`
-    background-color: #ededed;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  background-color: ${({ theme }) => theme.backgroundColor};
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 const WeatherCard = styled.div`
-    position: relative;
-    min-width: 360px;
-    box-shadow: 0 1px 3px 0 #999999;
-    background-color: #f9f9f9;
-    box-sizing: border-box;
-    padding: 30px 15px;
+  position: relative;
+  min-width: 360px;
+  box-shadow: ${({ theme }) => theme.boxShadow};
+  background-color: ${({ theme }) => theme.foregroundColor};
+  box-sizing: border-box;
+  padding: 30px 15px;
 `;
 
 const Location = styled.div`
-    font-size: 28px;
-    color: #212121;
-    margin-bottom: 20px;
+  font-size: 28px;
+  color: ${({ theme }) => theme.titleColor};
+  margin-bottom: 20px;
 `;
 
 const Description = styled.div`
-    font-size: 16px;
-    color: #828282;
-    margin-bottom: 30px;
+  font-size: 16px;
+  color: ${({ theme }) => theme.textColor};
+  margin-bottom: 30px;
 `;
 
 const CurrentWeather = styled.div`
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
 `;
 
 const Temperature = styled.div`
-    color: #757575;
-    font-size: 96px;
-    font-weight: 300;
-    display: flex;
+  color: ${({ theme }) => theme.temperatureColor};
+  font-size: 96px;
+  font-weight: 300;
+  display: flex;
 `;
 
 const Celsius = styled.div`
-    font-weight: normal;
-    font-size: 42px;
+  font-weight: normal;
+  font-size: 42px;
 `;
 
 const AirFlow = styled.div`
-    display: flex;
-    align-items: center;
-    font-size: 16px;
-    font-weight: 300;
-    color: #828282;
-    margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  font-size: 16x;
+  font-weight: 300;
+  color: ${({ theme }) => theme.textColor};
+  margin-bottom: 20px;
 
-    svg {
-        width: 25px;
-        height: auto;
-        margin-right: 30px;
-    }
+  svg {
+    width: 25px;
+    height: auto;
+    margin-right: 30px;
+  }
 `;
 
 const Rain = styled.div`
-    display: flex;
-    align-items: center;
-    font-size: 16px;
-    font-weight: 300;
-    color: #828282;
+  display: flex;
+  align-items: center;
+  font-size: 16x;
+  font-weight: 300;
+  color: ${({ theme }) => theme.textColor};
 
-    svg {
-        width: 25px;
-        height: auto;
-        margin-right: 30px;
-    }
+  svg {
+    width: 25px;
+    height: auto;
+    margin-right: 30px;
+  }
 `;
 
 const Refresh = styled.div`
-    position: absolute;
-    right: 15px;
-    bottom: 15px;
-    font-size: 12px;
-    display: inline-flex;
-    align-items: flex-end;
-    color: #828282;
+  position: absolute;
+  right: 15px;
+  bottom: 15px;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: flex-end;
+  color: ${({ theme }) => theme.textColor};
 
-    svg {
-        margin-left: 10px;
-        width: 15px;
-        height: 15px;
-        cursor: pointer;
-        animation: rotate infinite 1.5s linear;
-        animation-duration: ${({ isLoading }) => (isLoading ? '1.5s' : '0s')};
-    }
+  svg {
+    margin-left: 10px;
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+    animation: rotate infinite 1.5s linear;
+    animation-duration: ${({ isLoading }) => (isLoading ? '1.5s' : '0s')};
+  }
 
-    @keyframes rotate {
-        from {
-            transform: rotate(360deg);
-        }
-        to {
-            transform: rotate(0deg);
-        }
+  @keyframes rotate {
+    from {
+      transform: rotate(360deg);
     }
+    to {
+      transform: rotate(0deg);
+    }
+  }
 `;
 
 // 定義 fetchCurrentWeather 方法，呼叫中央氣象局API
 const fetchCurrentWeather = () => {
-    // STEP 3-1: 加上return 直接把fect API 回傳的Promise回傳出去
+    // 加上return 直接把fect API 回傳的Promise回傳出去
     return fetch('https://opendata.cwb.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=CWB-B699F3CC-3A72-43B8-86D3-99C66F0582DC&locationName=臺北')
         .then((response) => response.json())
         .then((data) => {
@@ -131,7 +154,7 @@ const fetchCurrentWeather = () => {
                 }
                 return neededElements
             }, {})
-            // 3-2: 把取得的資料內容回傳出去，而不是在這裡 setWeatherElement
+            // 把取得的資料內容回傳出去，而不是在這裡 setWeatherElement
             return {
                 observationTime: locationData.time.obsTime,
                 locationName: locationData.locationName,
@@ -142,7 +165,7 @@ const fetchCurrentWeather = () => {
         })
 };
 const fetchWeatherForecast = () => {
-    // STEP 4-1: 加上return 直接把fect API 回傳的Promise回傳出去
+    // 加上return 直接把fect API 回傳的Promise回傳出去
     return fetch('https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization=CWB-B699F3CC-3A72-43B8-86D3-99C66F0582DC&locationName=臺北市')
         .then((response) => response.json())
         .then((data) => {
@@ -153,7 +176,7 @@ const fetchWeatherForecast = () => {
                 }
                 return neededElements;
             }, {})
-            // 4-2: 把取得的資料內容回傳出去，而不是在這裡 setWeatherElement
+            // 把取得的資料內容回傳出去，而不是在這裡 setWeatherElement
             return {
                 description: weatherElements.Wx.parameterName,
                 weatherCode: weatherElements.Wx.parameterValue,
@@ -194,6 +217,8 @@ const getMoment = locationName => {
 
 const WeatherApp = () => {
     console.log('invoke function component')
+    // 使用 useState 並定義 currentTheme 的預設值為light
+    const [ currentTheme, setCurrentTheme ] = useState('light');
     // 定義會使用到的資料狀態
     const [weatherElement, setWeatherElement] = useState({
         observationTime: new Date(),
@@ -251,42 +276,50 @@ const WeatherApp = () => {
     useEffect(() => {
         fetchData();
     }, [fetchData]);
-    return (
-        <Container>
-            <WeatherCard>
-                <Location>{locationName}</Location>
-                <Description>
-                    {description} {comfortability}
-                </Description>
-                <CurrentWeather>
-                    <Temperature>
-                        {Math.round(temperature)}<Celsius>°C</Celsius>
-                    </Temperature>
-                    {/* 將 momnet 帶入 props 中 */}
-                    <WeatherIcon currentWeatherCode={weatherCode} moment={moment || 'day'} />
-                </CurrentWeather>
-                <AirFlow>
-                    <AirFlowIcon />
-                    {windSpeed} m/h
-                </AirFlow>
-                <Rain>
-                    <RainIcon />
-                    {Math.round(rainPossibility)} %
-                </Rain>
-                {/* 將最後觀測時間移到畫面右下角呈現 */}
-                <Refresh onClick={fetchData} isLoading={isLoading}>
-                    最後觀測時間:
-                    {/* 優化時間呈現 */}
-                    {new Intl.DateTimeFormat('zh-TW', {
-                        hour: 'numeric',
-                        minute: 'numeric'
-                    }).format(new Date(observationTime))}{' '}
 
-                    {/* 當 isLoading 為true的時候顯示 LoadingIcon 否則顯示 RedoIcon */}
-                    {isLoading ? <LoadingIcon /> : <RefreshIcon />}
-                </Refresh>
-            </WeatherCard>
-        </Container>
+    // 根據 moment 決定要使用亮色或深色主題
+    useEffect(() => {
+        setCurrentTheme(moment === 'day' ? 'light' : 'dark');
+    }, [moment]) 
+    return (
+        // 把主題配色透過 props 帶入 ThemeProvider 中
+        <ThemeProvider theme={theme[currentTheme]}>
+            <Container>
+                <WeatherCard>
+                    <Location>{locationName}</Location>
+                    <Description>
+                        {description} {comfortability}
+                    </Description>
+                    <CurrentWeather>
+                        <Temperature>
+                            {Math.round(temperature)}<Celsius>°C</Celsius>
+                        </Temperature>
+                        {/* 將 momnet 帶入 props 中 */}
+                        <WeatherIcon currentWeatherCode={weatherCode} moment={moment || 'day'} />
+                    </CurrentWeather>
+                    <AirFlow>
+                        <AirFlowIcon />
+                        {windSpeed} m/h
+                </AirFlow>
+                    <Rain>
+                        <RainIcon />
+                        {Math.round(rainPossibility)} %
+                </Rain>
+                    {/* 將最後觀測時間移到畫面右下角呈現 */}
+                    <Refresh onClick={fetchData} isLoading={isLoading}>
+                        最後觀測時間:
+                    {/* 優化時間呈現 */}
+                        {new Intl.DateTimeFormat('zh-TW', {
+                            hour: 'numeric',
+                            minute: 'numeric'
+                        }).format(new Date(observationTime))}{' '}
+
+                        {/* 當 isLoading 為true的時候顯示 LoadingIcon 否則顯示 RedoIcon */}
+                        {isLoading ? <LoadingIcon /> : <RefreshIcon />}
+                    </Refresh>
+                </WeatherCard>
+            </Container>
+        </ThemeProvider>
     );
 };
 
