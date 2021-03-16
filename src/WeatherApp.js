@@ -10,6 +10,8 @@ import sunriseAndSunsetData from './sunrise-sunset.json';
 import WeatherCard from './WeatherCard';
 // 載入 useWeatherApi Hook
 import useWeatherApi from './useWeatherApi';
+// 匯入 WeatherSetting組件
+import WeatherSetting from './WeatherSetting';
 
 // 定義主題配色
 const theme = {
@@ -71,6 +73,8 @@ const getMoment = locationName => {
 };
 
 const WeatherApp = () => {
+    // 定義 currentPage 這個 state ， 預設值是WeatherCard
+    const [currentPage, setCurrentPage] = useState('WeatherCard');
     // 使用 useWeatherApi Hook 後就能取得 weatherElement 和 fetchData 這兩個方法
     const [weatherElement, fetchData] = useWeatherApi();
     // 使用 useState 並定義 currentTheme 的預設值為light
@@ -92,9 +96,12 @@ const WeatherApp = () => {
         // 把主題配色透過 props 帶入 ThemeProvider 中
         <ThemeProvider theme={theme[currentTheme]}>
             <Container>
-                <WeatherCard weatherElement={weatherElement}
+                {/* 條件渲染根據 currentPage 狀態改變顯示組件 */}
+                {currentPage === 'WeatherCard' && <WeatherCard weatherElement={weatherElement}
                     moment={moment}
-                    fetchData={fetchData} />
+                    fetchData={fetchData}
+                    setCurrentPage={setCurrentPage} />}
+                {currentPage === 'WeatherSetting' && <WeatherSetting setCurrentPage={setCurrentPage} />}
             </Container>
         </ThemeProvider>
     );

@@ -7,6 +7,7 @@ import { ReactComponent as AirFlowIcon } from './images/airFlow.svg';
 import { ReactComponent as RainIcon } from './images/rain.svg';
 import { ReactComponent as RefreshIcon } from './images/refresh.svg';
 import { ReactComponent as LoadingIcon } from './images/loading.svg';
+import { ReactComponent as CogIcon } from './images/cog.svg';
 
 const WeatherCardWrapper = styled.div`
   position: relative;
@@ -105,59 +106,69 @@ const Refresh = styled.div`
   }
 `;
 
+const Cog = styled(CogIcon)`
+  position: absolute;
+  top: 30px;
+  right: 15px;
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+`;
+
 const WeatherCard = (props) => {
 
-    // 透過物件的解構賦值從 props 中取出傳入的資料
-    const { weatherElement, moment, fetchData } = props;
+  // 透過物件的解構賦值從 props 中取出傳入的資料
+  const { weatherElement, moment, fetchData, setCurrentPage } = props;
 
-    // 將 weatherElement 中的資料透過解構賦值取出後，放置到 JSX 中使用
-    const {
-        observationTime,
-        locationName,
-        temperature,
-        windSpeed,
-        description,
-        weatherCode,
-        rainPossibility,
-        comfortability,
-        isLoading,
-    } = weatherElement;
+  // 將 weatherElement 中的資料透過解構賦值取出後，放置到 JSX 中使用
+  const {
+    observationTime,
+    locationName,
+    temperature,
+    windSpeed,
+    description,
+    weatherCode,
+    rainPossibility,
+    comfortability,
+    isLoading,
+  } = weatherElement;
 
-    return (
-        <WeatherCardWrapper>
-            <Location>{locationName}</Location>
-            <Description>
-                {description} {comfortability}
-            </Description>
-            <CurrentWeather>
-                <Temperature>
-                    {Math.round(temperature)}<Celsius>°C</Celsius>
-                </Temperature>
-                {/* 將 momnet 帶入 props 中 */}
-                <WeatherIcon currentWeatherCode={weatherCode} moment={moment || 'day'} />
-            </CurrentWeather>
-            <AirFlow>
-                <AirFlowIcon />
-                {windSpeed} m/h
+  return (
+    <WeatherCardWrapper>
+      <Cog onClick={() => setCurrentPage('WeatherSetting')} />
+      <Location>{locationName}</Location>
+      <Description>
+        {description} {comfortability}
+      </Description>
+      <CurrentWeather>
+        <Temperature>
+          {Math.round(temperature)}<Celsius>°C</Celsius>
+        </Temperature>
+        {/* 將 momnet 帶入 props 中 */}
+        <WeatherIcon currentWeatherCode={weatherCode} moment={moment || 'day'} />
+      </CurrentWeather>
+      <AirFlow>
+        <AirFlowIcon />
+        {windSpeed} m/h
                 </AirFlow>
-            <Rain>
-                <RainIcon />
-                {Math.round(rainPossibility)} %
+      <Rain>
+        <RainIcon />
+        {Math.round(rainPossibility)} %
                 </Rain>
-            {/* 將最後觀測時間移到畫面右下角呈現 */}
-            <Refresh onClick={fetchData} isLoading={isLoading}>
-                最後觀測時間:
+      {/* 將最後觀測時間移到畫面右下角呈現 */}
+      <Refresh onClick={fetchData} isLoading={isLoading}>
+        最後觀測時間:
                     {/* 優化時間呈現 */}
-                {new Intl.DateTimeFormat('zh-TW', {
-                    hour: 'numeric',
-                    minute: 'numeric'
-                }).format(new Date(observationTime))}{' '}
+        {new Intl.DateTimeFormat('zh-TW', {
+          hour: 'numeric',
+          minute: 'numeric'
+        }).format(new Date(observationTime))}{' '}
 
-                {/* 當 isLoading 為true的時候顯示 LoadingIcon 否則顯示 RedoIcon */}
-                {isLoading ? <LoadingIcon /> : <RefreshIcon />}
-            </Refresh>
-        </WeatherCardWrapper>
-    )
+        {/* 當 isLoading 為true的時候顯示 LoadingIcon 否則顯示 RedoIcon */}
+        {isLoading ? <LoadingIcon /> : <RefreshIcon />}
+      </Refresh>
+    </WeatherCardWrapper>
+  )
 }
 
 export default WeatherCard;
