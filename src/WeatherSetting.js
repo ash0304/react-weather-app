@@ -1,4 +1,5 @@
-import React from 'react';
+// 練習使用useRef
+import React, { useState } from 'react';
 import styled from '@emotion/styled';
 
 const WeatherSettingWrapper = styled.div`
@@ -88,35 +89,54 @@ const Save = styled.button`
 `;
 
 const locations = [
-    '嘉義縣', '新北市', '嘉義市', '新竹縣', '新竹市',
-    '臺北市', '臺南市', '宜蘭縣', '苗栗縣', '雲林縣',
-    '花蓮縣', '臺中市', '臺東縣', '桃園市', '南投縣',
-    '高雄市', '金門縣', '屏東縣', '基隆市', '澎湖縣',
-    '彰化縣', '連江縣',
+  '嘉義縣', '新北市', '嘉義市', '新竹縣', '新竹市',
+  '臺北市', '臺南市', '宜蘭縣', '苗栗縣', '雲林縣',
+  '花蓮縣', '臺中市', '臺東縣', '桃園市', '南投縣',
+  '高雄市', '金門縣', '屏東縣', '基隆市', '澎湖縣',
+  '彰化縣', '連江縣',
 ];
 
 const WeatherSetting = (props) => {
+  const { setCurrentPage } = props;
+  const [locationName, setLocationName] = useState('臺北市');
+  // 定義 handleChange 要做的事
+  const handleChange = (e) => {
+    console.log(e.target.value);
+    setLocationName(e.target.value);
+  }
+  
+  // 定義 handleSave 方法
+  const handleSave = () => {
+    if (locations.includes(locationName)) {
+      // 儲存地區資訊
+      console.log(`儲存的地區資訊為${locationName}`);
+      // 透過 setCurrentPage 導回天氣資訊頁
+      setCurrentPage('WeatherCard');
+    } else {
+      // 若不包含該選項，顯示警示訊息
+      alert(`儲存失敗: 您輸入的 ${locationName} 並非有效地區`);
+      return;
+    }
+  };
 
-    const { setCurrentPage } = props;
+  return (
+    <WeatherSettingWrapper>
+      <Title>設定</Title>
+      <StyledLabel htmlFor="location" >地區</StyledLabel>
+      <StyledInputList value={locationName} list="location-list" id="location" name="loaction" onChange={handleChange} />
+      <datalist id="location-list">
+        { /* 定義 datalist 中的 options, 利用迴圈方式跑出所有 option */}
+        {locations.map(location => {
+          return <option value={location} key={location} />
+        })}
+      </datalist>
 
-    return (
-        <WeatherSettingWrapper>
-            <Title>設定</Title>
-            <StyledLabel htmlFor="location" >地區</StyledLabel>
-            <StyledInputList list="location-list" id="location" name="loaction" />
-            <datalist id="location-list">
-                { /* 定義 datalist 中的 options, 利用迴圈方式跑出所有 option */}
-                {locations.map(location => {
-                    return <option value={location} key={location} />
-                })}
-            </datalist>
-
-            <ButtonGroup>
-                <Back onClick={() => setCurrentPage('WeatherCard')}>返回</Back>
-                <Save>儲存</Save>
-            </ButtonGroup>
-        </WeatherSettingWrapper>
-    );
+      <ButtonGroup>
+        <Back onClick={() => setCurrentPage('WeatherCard')}>返回</Back>
+        <Save onClick={handleSave}>儲存</Save>
+      </ButtonGroup>
+    </WeatherSettingWrapper>
+  );
 };
 
 export default WeatherSetting;
