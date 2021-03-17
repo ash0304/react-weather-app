@@ -118,12 +118,11 @@ const Cog = styled(CogIcon)`
 const WeatherCard = (props) => {
 
   // 透過物件的解構賦值從 props 中取出傳入的資料
-  const { weatherElement, moment, fetchData, setCurrentPage } = props;
+  const { weatherElement, moment, fetchData, setCurrentPage, cityName  } = props;
 
   // 將 weatherElement 中的資料透過解構賦值取出後，放置到 JSX 中使用
   const {
     observationTime,
-    locationName,
     temperature,
     windSpeed,
     description,
@@ -136,7 +135,7 @@ const WeatherCard = (props) => {
   return (
     <WeatherCardWrapper>
       <Cog onClick={() => setCurrentPage('WeatherSetting')} />
-      <Location>{locationName}</Location>
+      <Location>{cityName}</Location>
       <Description>
         {description} {comfortability}
       </Description>

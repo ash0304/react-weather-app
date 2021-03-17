@@ -12,6 +12,8 @@ import WeatherCard from './WeatherCard';
 import useWeatherApi from './useWeatherApi';
 // 匯入 WeatherSetting組件
 import WeatherSetting from './WeatherSetting';
+// 匯入定義好的 findLocation 方法
+import { findLocation } from './utils';
 
 // 定義主題配色
 const theme = {
@@ -46,7 +48,7 @@ const Container = styled.div`
 const getMoment = locationName => {
     // STEP 2 : 從日出日落時間中找出符合的地區
     const location = sunriseAndSunsetData.find(
-        data => data.locationName.substr(0, 2) === locationName
+        data => data.locationName === locationName
     )
     // STEP 3: 找不到的話回傳null
     if (!location) return null;
@@ -73,21 +75,25 @@ const getMoment = locationName => {
 };
 
 const WeatherApp = () => {
+    // 從 localStorage 取出 cityName，並取名為storageCity
+    const storageCity = localStorage.getItem('cityName');
+    // 使用 useState 並定義當前要拉取天氣資訊的地區，預設為臺北市
+    const [currentCity, setCurrentCity] = useState(storageCity || '臺北市');
+    // 根據 currentCity 來找出對應到不同 API 時顯示的地區名稱，找到的地區取名為locationInfo
+    const currentLocation = findLocation(currentCity) || {};
     // 定義 currentPage 這個 state ， 預設值是WeatherCard
     const [currentPage, setCurrentPage] = useState('WeatherCard');
     // 使用 useWeatherApi Hook 後就能取得 weatherElement 和 fetchData 這兩個方法
-    const [weatherElement, fetchData] = useWeatherApi();
+    const [weatherElement, fetchData] = useWeatherApi(currentLocation);
     // 使用 useState 並定義 currentTheme 的預設值為light
     const [currentTheme, setCurrentTheme] = useState('light');
 
-    // 解構賦值
-    const {
-        locationName,
-    } = weatherElement;
-
     // 透過 useMemo 避免每次都重新計算取值，記得帶入dependencies
-    const moment = useMemo(() => getMoment(locationName), [locationName]);
-
+    const moment = useMemo(() => getMoment(currentLocation.sunriseCityName), [currentLocation.sunriseCityName]);
+    // 當 currentCity 有改變的時候，儲存到 localStorage 中
+    useEffect(() => {
+        localStorage.setItem('cityName', currentCity);
+    }, [currentCity])
     // 根據 moment 決定要使用亮色或深色主題
     useEffect(() => {
         setCurrentTheme(moment === 'day' ? 'light' : 'dark');
@@ -98,10 +104,11 @@ const WeatherApp = () => {
             <Container>
                 {/* 條件渲染根據 currentPage 狀態改變顯示組件 */}
                 {currentPage === 'WeatherCard' && <WeatherCard weatherElement={weatherElement}
+                    cityName={currentLocation.cityName}
                     moment={moment}
                     fetchData={fetchData}
                     setCurrentPage={setCurrentPage} />}
-                {currentPage === 'WeatherSetting' && <WeatherSetting setCurrentPage={setCurrentPage} />}
+                {currentPage === 'WeatherSetting' && <WeatherSetting cityName={currentLocation.cityName} setCurrentCity={setCurrentCity} setCurrentPage={setCurrentPage} />}
             </Container>
         </ThemeProvider>
     );

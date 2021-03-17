@@ -2,6 +2,9 @@
 import React, { useState } from 'react';
 import styled from '@emotion/styled';
 
+// 匯入 availableLocations
+import { availableLocations } from './utils';
+
 const WeatherSettingWrapper = styled.div`
   position: relative;
   min-width: 360px;
@@ -88,28 +91,24 @@ const Save = styled.button`
   }
 `;
 
-const locations = [
-  '嘉義縣', '新北市', '嘉義市', '新竹縣', '新竹市',
-  '臺北市', '臺南市', '宜蘭縣', '苗栗縣', '雲林縣',
-  '花蓮縣', '臺中市', '臺東縣', '桃園市', '南投縣',
-  '高雄市', '金門縣', '屏東縣', '基隆市', '澎湖縣',
-  '彰化縣', '連江縣',
-];
+// 從 availableLocations 取出 cityName 來做為讓使用者可以選擇地區的清單
+const locations = availableLocations.map((location) => location.cityName);
 
 const WeatherSetting = (props) => {
-  const { setCurrentPage } = props;
-  const [locationName, setLocationName] = useState('臺北市');
+  const { setCurrentPage, cityName, setCurrentCity } = props;
+  const [locationName, setLocationName] = useState(cityName);
   // 定義 handleChange 要做的事
   const handleChange = (e) => {
     console.log(e.target.value);
     setLocationName(e.target.value);
   }
-  
+
   // 定義 handleSave 方法
   const handleSave = () => {
     if (locations.includes(locationName)) {
       // 儲存地區資訊
       console.log(`儲存的地區資訊為${locationName}`);
+      setCurrentCity(locationName);
       // 透過 setCurrentPage 導回天氣資訊頁
       setCurrentPage('WeatherCard');
     } else {
