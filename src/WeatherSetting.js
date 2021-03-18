@@ -1,8 +1,5 @@
-// 練習使用useRef
 import React, { useState } from 'react';
 import styled from '@emotion/styled';
-
-// 匯入 availableLocations
 import { availableLocations } from './utils';
 
 const WeatherSettingWrapper = styled.div`
@@ -27,7 +24,7 @@ const StyledLabel = styled.label`
   margin-bottom: 15px;
 `;
 
-const StyledInputList = styled.input`
+const StyledSelect = styled.select`
   display: block;
   box-sizing: border-box;
   background: transparent;
@@ -39,6 +36,10 @@ const StyledInputList = styled.input`
   font-size: 16px;
   padding: 7px 10px;
   margin-bottom: 40px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  box-shadow: none;
+  outline: 0;
 `;
 
 const ButtonGroup = styled.div`
@@ -63,6 +64,7 @@ const ButtonGroup = styled.div`
     height: 35px;
     width: 80px;
     border-radius: 5px;
+    font-size: 14px;
 
     &:focus,
     &.focus {
@@ -91,29 +93,22 @@ const Save = styled.button`
   }
 `;
 
-// 從 availableLocations 取出 cityName 來做為讓使用者可以選擇地區的清單
 const locations = availableLocations.map((location) => location.cityName);
 
-const WeatherSetting = (props) => {
-  const { setCurrentPage, cityName, setCurrentCity } = props;
+const WeatherSetting = ({ setCurrentPage, cityName, setCurrentCity }) => {
   const [locationName, setLocationName] = useState(cityName);
-  // 定義 handleChange 要做的事
-  const handleChange = (e) => {
-    console.log(e.target.value);
-    setLocationName(e.target.value);
-  }
 
-  // 定義 handleSave 方法
+  const handleChange = (e) => {
+    setLocationName(e.target.value);
+  };
+
   const handleSave = () => {
     if (locations.includes(locationName)) {
-      // 儲存地區資訊
-      console.log(`儲存的地區資訊為${locationName}`);
-      setCurrentCity(locationName);
-      // 透過 setCurrentPage 導回天氣資訊頁
+      console.log(`儲存的地區資訊為：${locationName}`);
       setCurrentPage('WeatherCard');
+      setCurrentCity(locationName);
     } else {
-      // 若不包含該選項，顯示警示訊息
-      alert(`儲存失敗: 您輸入的 ${locationName} 並非有效地區`);
+      alert(`儲存失敗：您輸入的 ${locationName} 並非有效的地區`);
       return;
     }
   };
@@ -121,14 +116,20 @@ const WeatherSetting = (props) => {
   return (
     <WeatherSettingWrapper>
       <Title>設定</Title>
-      <StyledLabel htmlFor="location" >地區</StyledLabel>
-      <StyledInputList value={locationName} list="location-list" id="location" name="loaction" onChange={handleChange} />
-      <datalist id="location-list">
-        { /* 定義 datalist 中的 options, 利用迴圈方式跑出所有 option */}
-        {locations.map(location => {
-          return <option value={location} key={location} />
-        })}
-      </datalist>
+      <StyledLabel htmlFor="location">地區</StyledLabel>
+
+      <StyledSelect
+        id="location"
+        name="location"
+        onChange={handleChange}
+        value={locationName}
+      >
+        {locations.map((location) => (
+          <option value={location} key={location}>
+            {location}
+          </option>
+        ))}
+      </StyledSelect>
 
       <ButtonGroup>
         <Back onClick={() => setCurrentPage('WeatherCard')}>返回</Back>

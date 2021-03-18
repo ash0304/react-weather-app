@@ -1,8 +1,7 @@
 import React from 'react';
-// 載入 emotion 的 styled 套件
 import styled from '@emotion/styled';
-// 載入圖示
-import WeatherIcon from './WeatherIcon';
+import dayjs from 'dayjs';
+import WeatherIcon from './WeatherIcon.js';
 import { ReactComponent as AirFlowIcon } from './images/airFlow.svg';
 import { ReactComponent as RainIcon } from './images/rain.svg';
 import { ReactComponent as RefreshIcon } from './images/refresh.svg';
@@ -116,11 +115,7 @@ const Cog = styled(CogIcon)`
 `;
 
 const WeatherCard = (props) => {
-
-  // 透過物件的解構賦值從 props 中取出傳入的資料
-  const { weatherElement, moment, fetchData, setCurrentPage, cityName  } = props;
-
-  // 將 weatherElement 中的資料透過解構賦值取出後，放置到 JSX 中使用
+  const { weatherElement, moment, fetchData, setCurrentPage, cityName } = props;
   const {
     observationTime,
     temperature,
@@ -141,33 +136,31 @@ const WeatherCard = (props) => {
       </Description>
       <CurrentWeather>
         <Temperature>
-          {Math.round(temperature)}<Celsius>°C</Celsius>
+          {Math.round(temperature)} <Celsius>°C</Celsius>
         </Temperature>
-        {/* 將 momnet 帶入 props 中 */}
-        <WeatherIcon currentWeatherCode={weatherCode} moment={moment || 'day'} />
+        <WeatherIcon
+          weatherCode={weatherCode}
+          moment={moment || 'day'}
+        />
       </CurrentWeather>
       <AirFlow>
         <AirFlowIcon />
         {windSpeed} m/h
-                </AirFlow>
+      </AirFlow>
       <Rain>
         <RainIcon />
         {Math.round(rainPossibility)} %
-                </Rain>
-      {/* 將最後觀測時間移到畫面右下角呈現 */}
+      </Rain>
       <Refresh onClick={fetchData} isLoading={isLoading}>
-        最後觀測時間:
-                    {/* 優化時間呈現 */}
+        最後觀測時間：
         {new Intl.DateTimeFormat('zh-TW', {
           hour: 'numeric',
-          minute: 'numeric'
-        }).format(new Date(observationTime))}{' '}
-
-        {/* 當 isLoading 為true的時候顯示 LoadingIcon 否則顯示 RedoIcon */}
+          minute: 'numeric',
+        }).format(dayjs(observationTime))}{' '}
         {isLoading ? <LoadingIcon /> : <RefreshIcon />}
       </Refresh>
     </WeatherCardWrapper>
-  )
-}
+  );
+};
 
 export default WeatherCard;
