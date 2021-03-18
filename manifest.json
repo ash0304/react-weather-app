@@ -1,36 +1,25 @@
 {
-  "short_name": "臺灣好天氣",
-  "name": "臺灣好天氣-即時縣市天氣",
+  "short_name": "React App",
+  "name": "Create React App Sample",
   "icons": [
     {
-      "src": "icon@x48.png",
-      "type": "image/png",
-      "sizes": "48 × 48"
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
     },
     {
-      "src": "icon@96.png",
-      "type": "image/png",
-      "sizes": "96x96"
-    },
-    {
-      "src": "icon@144.png",
-      "type": "image/png",
-      "sizes": "144x144"
-    },
-    {
-      "src": "icon@192.png",
+      "src": "logo192.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "icon@512.png",
+      "src": "logo512.png",
       "type": "image/png",
       "sizes": "512x512"
     }
   ],
   "start_url": ".",
   "display": "standalone",
-  "orientation": "portrait-primary",
-  "theme_color": "#1f2022",
-  "background_color": "#1f2022"
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
 }
