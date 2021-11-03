@@ -38,7 +38,7 @@ const Container = styled.div`
 
 const getMoment = (locationName) => {
   const location = sunriseAndSunsetData.find(
-    (data) => data.locationName === locationName
+    (data) => data.locationName.slice(0,2) === locationName
   );
 
   if (!location) return null;
