@@ -76,11 +76,13 @@ const useWeatherApi = (currentLocation) => {
         fetchWeatherForecast(cityName),
       ]);
 
-      setWeatherElement({
-        ...currentWeather,
-        ...weatherForecast,
-        isLoading: false,
-      });
+      setTimeout(() => {
+        setWeatherElement({
+          ...currentWeather,
+          ...weatherForecast,
+          isLoading: false,
+        });
+      }, 500);
     };
 
     setWeatherElement((prevState) => ({
